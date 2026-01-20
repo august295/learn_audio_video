@@ -1,0 +1,20 @@
+# build
+build*
+
+# vs
+.vs
+*.bat
+*.aps
+
+# vs remote
+out/
+CMakePresets.json
+CMakeSettings.json
+CMakeUserPresets.json
+
+# vscode
+.vscode
+
+# clangd
+.clangd
+.cache

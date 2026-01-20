@@ -1,0 +1,6 @@
+﻿# 音视频基础
+add_subdirectory(base/yuv)
+add_subdirectory(base/rgb)
+
+add_subdirectory(base/pcm)
+add_subdirectory(base/h264)
