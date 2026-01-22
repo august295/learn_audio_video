@@ -5,3 +5,5 @@ add_subdirectory(base/h264)
 
 add_subdirectory(base/pcm)
 add_subdirectory(base/aac)
+
+add_subdirectory(base/flv)
