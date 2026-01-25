@@ -7,3 +7,6 @@ add_subdirectory(base/pcm)
 add_subdirectory(base/aac)
 
 add_subdirectory(base/flv)
+
+# 工具
+add_subdirectory(tools/h264_analyzer)

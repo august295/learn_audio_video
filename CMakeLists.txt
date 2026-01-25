@@ -1,6 +1,8 @@
 ﻿# 要求最低Cmake版本
 cmake_minimum_required(VERSION 3.15.0)
 
+include(cmake/module_vcpkg.cmake)
+
 # 项目名称
 set(UseProjectName "learn_audio_video")
 project(${UseProjectName})
@@ -44,6 +46,7 @@ set(CMAKE_MINSIZEREL_POSTFIX "m")
 set(CMAKE_RELWITHDEBINFO_POSTFIX "rd")
 
 # 三方库
+VCPKG_LOAD_3RDPARTY()
 include(${ROOT_DIR}/cmake/module.cmake)
 
 # 执行文件

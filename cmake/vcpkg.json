@@ -1,0 +1,27 @@
+{
+    "dependencies": [
+        "ffmpeg",
+        "glfw3",
+        "sdl2",
+        "opengl"
+    ],
+    "builtin-baseline": "6f29f12e82a8293156836ad81cc9bf5af41fe836",
+    "overrides": [
+        {
+            "name": "ffmpeg",
+            "version": "6.0"
+        },
+        {
+            "name": "glfw3",
+            "version": "3.4"
+        },
+        {
+            "name": "sdl2",
+            "version": "2.32.4"
+        },
+        {
+            "name": "opengl",
+            "version": "2022-10-08"
+        }
+    ]
+}
