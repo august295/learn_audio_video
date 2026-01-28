@@ -25,6 +25,15 @@ macro(VCPKG_LOAD_3RDPARTY)
     set(CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
     message(STATUS "Loading 3rd party libraries from vcpkg...")
 
+    # FFMPEG
+    find_package(FFMPEG REQUIRED)
+    if(FFMPEG_FOUND)
+        message(STATUS "FFMPEG includes: ${FFMPEG_INCLUDE_DIRS}")
+        message(STATUS "FFMPEG libraries: ${FFMPEG_LIBRARIES}")
+    else()
+        message(FATAL_ERROR "FFMPEG not found")
+    endif()
+
     # GLFW
     find_package(glfw3 CONFIG REQUIRED)
     if(glfw3_FOUND)

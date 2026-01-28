@@ -10,3 +10,6 @@ add_subdirectory(base/flv)
 
 # 工具
 add_subdirectory(tools/h264_analyzer)
+
+# player
+add_subdirectory(player/ffplayer)
