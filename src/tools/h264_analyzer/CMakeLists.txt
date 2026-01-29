@@ -37,6 +37,9 @@ target_include_directories(${ProjectName} PRIVATE
     ${ROOT_DIR}/3rdparty/imgui
     ${ROOT_DIR}/3rdparty/imgui/backends
 )
+set_target_properties(${ProjectName} PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
 
 # 添加依赖
 target_link_libraries(${ProjectName} PRIVATE glfw)

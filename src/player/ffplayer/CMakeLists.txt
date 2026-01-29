@@ -10,6 +10,9 @@ target_include_directories(${ProjectName} PRIVATE
     ${ROOT_DIR}/src
     ${ROOT_DIR}/3rdparty/spdlog/include
 )
+set_target_properties(${ProjectName} PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
 
 # 添加依赖
 target_include_directories(${ProjectName} PRIVATE ${FFMPEG_INCLUDE_DIRS})

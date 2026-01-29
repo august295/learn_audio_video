@@ -1,5 +1,8 @@
 # 设置 vcpkg 配置
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    # VS 2022 17.6+ 内置 vcpkg 位置: <VS>\VC\vcpkg
+    # VS 内置的 vcpkg 优先级高于环境变量
+    # 自定义 vcpkg 位置需提前手动设置 VCPKG_ROOT
     if(NOT DEFINED VCPKG_ROOT)
         if(DEFINED ENV{VCPKG_ROOT})
             set(VCPKG_ROOT "$ENV{VCPKG_ROOT}")

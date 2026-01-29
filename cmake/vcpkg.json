@@ -9,7 +9,7 @@
     "overrides": [
         {
             "name": "ffmpeg",
-            "version": "6.0"
+            "version": "7.1.2"
         },
         {
             "name": "glfw3",

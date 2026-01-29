@@ -2,10 +2,25 @@
 
 
 
+## 环境
+
+- Visual Studio 2022
+- CMake 3.15+
+- vcpkg
+
+
+## 下载
+
+```git
+git clone --recursive git@github.com:august295/learn_audio_video.git
+```
+
+
 ## 编译
 
-```
+```cmake
 cmake -B"build" -G"Visual Studio 17 2022"
+cmake --build build
 ```
 
 
