@@ -53,6 +53,7 @@ macro(VCPKG_LOAD_3RDPARTY)
     else()
         message(FATAL_ERROR "SDL2 not found")
     endif()
+    find_package(SDL2_ttf CONFIG REQUIRED)
 
     # OpenGL
     find_package(OpenGL REQUIRED)

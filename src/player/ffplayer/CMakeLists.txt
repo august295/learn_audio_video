@@ -21,4 +21,12 @@ target_link_libraries(${ProjectName} PRIVATE ${FFMPEG_LIBRARIES})
 target_link_libraries(${ProjectName} PRIVATE
     $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
     $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2_ttf::SDL2_ttf,SDL2_ttf::SDL2_ttf-static>
+)
+
+# 拷贝资源文件
+add_custom_command(
+    TARGET "${ProjectName}" POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources/" "${BUILD_DIR}/bin/resources"
+    COMMENT "Copying resources"
 )
