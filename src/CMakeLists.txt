@@ -8,6 +8,9 @@ add_subdirectory(base/aac)
 
 add_subdirectory(base/flv)
 
+# 三方库
+add_subdirectory(sdl2)
+
 # 工具
 add_subdirectory(tools/h264_analyzer)
 

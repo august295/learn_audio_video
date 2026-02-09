@@ -1,0 +1,5 @@
+﻿add_subdirectory(01hello_sdl)
+add_subdirectory(02show_image)
+add_subdirectory(03handle_event)
+add_subdirectory(04handle_key)
+add_subdirectory(05stretch)
