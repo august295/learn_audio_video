@@ -4,6 +4,8 @@
         "glfw3",
         "sdl2",
         "sdl2-ttf",
+        "sdl2-image",
+        "sdl2-mixer",
         "opengl"
     ],
     "builtin-baseline": "6f29f12e82a8293156836ad81cc9bf5af41fe836",
