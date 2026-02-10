@@ -3,12 +3,14 @@
 #include <spdlog/spdlog.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 const int SCREEN_WIDTH  = 640;
 const int SCREEN_HEIGHT = 480;
 
 SDL_Window*   g_window   = NULL;
 SDL_Renderer* g_renderer = NULL;
+TTF_Font*     g_font     = NULL;
 
 class LTexture
 {
@@ -36,7 +38,8 @@ public:
         }
         else
         {
-            SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
+            // 一次只能过滤一种颜色
+            SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0, 0));
             newTexture = SDL_CreateTextureFromSurface(g_renderer, loadedSurface);
             if (newTexture == NULL)
             {
@@ -50,6 +53,33 @@ public:
             SDL_FreeSurface(loadedSurface);
         }
         m_texture = newTexture;
+        return m_texture != NULL;
+    }
+    // 从字体字符串创建图像
+    bool loadFromRenderedText(std::string textureText, SDL_Color textColor)
+    {
+        free();
+
+        // 渲染文本表面
+        SDL_Surface* textSurface = TTF_RenderText_Solid(g_font, textureText.c_str(), textColor);
+        if (textSurface == NULL)
+        {
+            SPDLOG_ERROR("Unable to render text surface! SDL_ttf Error: {}", TTF_GetError());
+        }
+        else
+        {
+            m_texture = SDL_CreateTextureFromSurface(g_renderer, textSurface);
+            if (m_texture == NULL)
+            {
+                SPDLOG_ERROR("Unable to create texture from rendered text! SDL Error: {}", SDL_GetError());
+            }
+            else
+            {
+                m_width  = textSurface->w;
+                m_height = textSurface->h;
+            }
+            SDL_FreeSurface(textSurface);
+        }
         return m_texture != NULL;
     }
     void free()
@@ -66,7 +96,16 @@ public:
     {
         SDL_SetTextureColorMod(m_texture, red, green, blue);
     }
-    void render(int x, int y, SDL_Rect* clip = NULL)
+    // alpha 调制
+    void setBlendMode(SDL_BlendMode blending)
+    {
+        SDL_SetTextureBlendMode(m_texture, blending);
+    }
+    void setAlpha(Uint8 alpha)
+    {
+        SDL_SetTextureAlphaMod(m_texture, alpha);
+    }
+    void render(int x, int y, SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE)
     {
         SDL_Rect renderQuad = {x, y, m_width, m_height};
         if (clip != NULL)
@@ -74,7 +113,8 @@ public:
             renderQuad.w = clip->w;
             renderQuad.h = clip->h;
         }
-        SDL_RenderCopy(g_renderer, m_texture, clip, &renderQuad);
+        // 渲染到屏幕
+        SDL_RenderCopyEx(g_renderer, m_texture, clip, &renderQuad, angle, center, flip);
     }
 
     int getWidth() { return m_width; }
@@ -86,7 +126,8 @@ private:
     int          m_height  = 0;
 };
 
-LTexture g_modulatedTexture;
+// 动画
+LTexture g_currentTexture;
 
 // 启动 SDL 和创建窗口
 bool init();
@@ -113,9 +154,6 @@ int main(int argc, char* argv[])
         {
             SDL_Event e;
             bool      quit = false;
-            Uint8     r    = 255;
-            Uint8     g    = 255;
-            Uint8     b    = 255;
             while (quit == false)
             {
                 while (SDL_PollEvent(&e))
@@ -124,21 +162,6 @@ int main(int argc, char* argv[])
                     {
                         quit = true;
                     }
-                    // 处理事件，字母按键需要鼠标辅助
-                    else if (e.type == SDL_KEYDOWN)
-                    {
-                        switch (e.key.keysym.sym)
-                        {
-                        case SDLK_q: r += 32; break;
-                        case SDLK_w: g += 32; break;
-                        case SDLK_e: b += 32; break;
-                        case SDLK_a: r -= 32; break;
-                        case SDLK_s: g -= 32; break;
-                        case SDLK_d: b -= 32; break;
-                        default:     break;
-                        }
-                        SPDLOG_INFO("r: {}, g: {}, b: {}", r, g, b);
-                    }
                 }
 
                 // 清空屏幕
@@ -146,8 +169,7 @@ int main(int argc, char* argv[])
                 SDL_RenderClear(g_renderer);
 
                 // 渲染图像
-                g_modulatedTexture.setColor(r, g, b);
-                g_modulatedTexture.render(0, 0);
+                g_currentTexture.render((SCREEN_WIDTH - g_currentTexture.getWidth()) / 2, (SCREEN_HEIGHT - g_currentTexture.getHeight()) / 2);
 
                 // 渲染
                 SDL_RenderPresent(g_renderer);
@@ -185,7 +207,7 @@ bool init()
                 SPDLOG_ERROR("Warning: Linear texture filtering not enabled!");
             }
             // 创建渲染器
-            g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_ACCELERATED);
+            g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
             if (g_renderer == NULL)
             {
                 SPDLOG_ERROR("Renderer could not be created! SDL_Error: {}", SDL_GetError());
@@ -201,6 +223,13 @@ bool init()
                     SPDLOG_ERROR("SDL_image could not initialize! SDL_image Error: {}", IMG_GetError());
                     success = false;
                 }
+
+                // 初始化 SDL_ttf
+                if (TTF_Init() == -1)
+                {
+                    SPDLOG_ERROR("SDL_ttf could not initialize! SDL_ttf Error: {}", TTF_GetError());
+                    success = false;
+                }
             }
         }
     }
@@ -212,10 +241,20 @@ bool loadMedia()
 {
     bool success = true;
 
-    if (g_modulatedTexture.loadFromFile("resources/colors.png") == false)
+    g_font = TTF_OpenFont("resources/lazy.ttf", 28);
+    if (g_font == NULL)
     {
-        SPDLOG_ERROR("Failed to load image!");
+        SPDLOG_ERROR("Failed to load font! SDL_ttf Error: {}", TTF_GetError());
         success = false;
+    }
+    else
+    {
+        SDL_Color textColor = {0, 0, 0};
+        if (!g_currentTexture.loadFromRenderedText("The quick brown fox jumps over the lazy dog", textColor))
+        {
+            SPDLOG_ERROR("Failed to render text texture!");
+            success = false;
+        }
     }
 
     return success;
@@ -224,7 +263,11 @@ bool loadMedia()
 void close()
 {
     // Free image
-    g_modulatedTexture.free();
+    g_currentTexture.free();
+
+    // Free font
+    TTF_CloseFont(g_font);
+    g_font = NULL;
 
     // Destroy window
     SDL_DestroyRenderer(g_renderer);

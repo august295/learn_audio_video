@@ -66,6 +66,15 @@ public:
     {
         SDL_SetTextureColorMod(m_texture, red, green, blue);
     }
+    // alpha 调制
+    void setBlendMode(SDL_BlendMode blending)
+    {
+        SDL_SetTextureBlendMode(m_texture, blending);
+    }
+    void setAlpha(Uint8 alpha)
+    {
+        SDL_SetTextureAlphaMod(m_texture, alpha);
+    }
     void render(int x, int y, SDL_Rect* clip = NULL)
     {
         SDL_Rect renderQuad = {x, y, m_width, m_height};
@@ -86,7 +95,10 @@ private:
     int          m_height  = 0;
 };
 
-LTexture g_modulatedTexture;
+// 动画
+const int WALKING_ANIMATION_FRAMES = 4;
+SDL_Rect  g_spriteClips[WALKING_ANIMATION_FRAMES];
+LTexture  g_spriteSheetTexture;
 
 // 启动 SDL 和创建窗口
 bool init();
@@ -112,10 +124,8 @@ int main(int argc, char* argv[])
         else
         {
             SDL_Event e;
-            bool      quit = false;
-            Uint8     r    = 255;
-            Uint8     g    = 255;
-            Uint8     b    = 255;
+            bool      quit  = false;
+            int       frame = 0;
             while (quit == false)
             {
                 while (SDL_PollEvent(&e))
@@ -124,21 +134,6 @@ int main(int argc, char* argv[])
                     {
                         quit = true;
                     }
-                    // 处理事件，字母按键需要鼠标辅助
-                    else if (e.type == SDL_KEYDOWN)
-                    {
-                        switch (e.key.keysym.sym)
-                        {
-                        case SDLK_q: r += 32; break;
-                        case SDLK_w: g += 32; break;
-                        case SDLK_e: b += 32; break;
-                        case SDLK_a: r -= 32; break;
-                        case SDLK_s: g -= 32; break;
-                        case SDLK_d: b -= 32; break;
-                        default:     break;
-                        }
-                        SPDLOG_INFO("r: {}, g: {}, b: {}", r, g, b);
-                    }
                 }
 
                 // 清空屏幕
@@ -146,8 +141,13 @@ int main(int argc, char* argv[])
                 SDL_RenderClear(g_renderer);
 
                 // 渲染图像
-                g_modulatedTexture.setColor(r, g, b);
-                g_modulatedTexture.render(0, 0);
+                SDL_Rect* currentClip = &g_spriteClips[frame / 4];
+                g_spriteSheetTexture.render((SCREEN_WIDTH - currentClip->w) / 2, (SCREEN_HEIGHT - currentClip->h) / 2, currentClip);
+                ++frame;
+                if (frame / 4 >= WALKING_ANIMATION_FRAMES)
+                {
+                    frame = 0;
+                }
 
                 // 渲染
                 SDL_RenderPresent(g_renderer);
@@ -185,7 +185,7 @@ bool init()
                 SPDLOG_ERROR("Warning: Linear texture filtering not enabled!");
             }
             // 创建渲染器
-            g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_ACCELERATED);
+            g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
             if (g_renderer == NULL)
             {
                 SPDLOG_ERROR("Renderer could not be created! SDL_Error: {}", SDL_GetError());
@@ -212,10 +212,32 @@ bool loadMedia()
 {
     bool success = true;
 
-    if (g_modulatedTexture.loadFromFile("resources/colors.png") == false)
+    if (g_spriteSheetTexture.loadFromFile("resources/foo.png") == false)
     {
         SPDLOG_ERROR("Failed to load image!");
         success = false;
+    }
+    else
+    {
+        g_spriteClips[0].x = 0;
+        g_spriteClips[0].y = 0;
+        g_spriteClips[0].w = 64;
+        g_spriteClips[0].h = 205;
+
+        g_spriteClips[1].x = 64;
+        g_spriteClips[1].y = 0;
+        g_spriteClips[1].w = 64;
+        g_spriteClips[1].h = 205;
+
+        g_spriteClips[2].x = 128;
+        g_spriteClips[2].y = 0;
+        g_spriteClips[2].w = 64;
+        g_spriteClips[2].h = 205;
+
+        g_spriteClips[3].x = 192;
+        g_spriteClips[3].y = 0;
+        g_spriteClips[3].w = 64;
+        g_spriteClips[3].h = 205;
     }
 
     return success;
@@ -224,7 +246,7 @@ bool loadMedia()
 void close()
 {
     // Free image
-    g_modulatedTexture.free();
+    g_spriteSheetTexture.free();
 
     // Destroy window
     SDL_DestroyRenderer(g_renderer);

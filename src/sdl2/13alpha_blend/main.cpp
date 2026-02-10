@@ -66,6 +66,15 @@ public:
     {
         SDL_SetTextureColorMod(m_texture, red, green, blue);
     }
+    // alpha 调制
+    void setBlendMode(SDL_BlendMode blending)
+    {
+        SDL_SetTextureBlendMode(m_texture, blending);
+    }
+    void setAlpha(Uint8 alpha)
+    {
+        SDL_SetTextureAlphaMod(m_texture, alpha);
+    }
     void render(int x, int y, SDL_Rect* clip = NULL)
     {
         SDL_Rect renderQuad = {x, y, m_width, m_height};
@@ -87,6 +96,7 @@ private:
 };
 
 LTexture g_modulatedTexture;
+LTexture g_backgroundTexture;
 
 // 启动 SDL 和创建窗口
 bool init();
@@ -113,9 +123,7 @@ int main(int argc, char* argv[])
         {
             SDL_Event e;
             bool      quit = false;
-            Uint8     r    = 255;
-            Uint8     g    = 255;
-            Uint8     b    = 255;
+            Uint8     a    = 255;
             while (quit == false)
             {
                 while (SDL_PollEvent(&e))
@@ -127,17 +135,29 @@ int main(int argc, char* argv[])
                     // 处理事件，字母按键需要鼠标辅助
                     else if (e.type == SDL_KEYDOWN)
                     {
-                        switch (e.key.keysym.sym)
+                        if (e.key.keysym.sym == SDLK_w)
                         {
-                        case SDLK_q: r += 32; break;
-                        case SDLK_w: g += 32; break;
-                        case SDLK_e: b += 32; break;
-                        case SDLK_a: r -= 32; break;
-                        case SDLK_s: g -= 32; break;
-                        case SDLK_d: b -= 32; break;
-                        default:     break;
+                            if (a + 32 > 255)
+                            {
+                                a = 255;
+                            }
+                            else
+                            {
+                                a += 32;
+                            }
                         }
-                        SPDLOG_INFO("r: {}, g: {}, b: {}", r, g, b);
+                        else if (e.key.keysym.sym == SDLK_s)
+                        {
+                            if (a - 32 < 0)
+                            {
+                                a = 0;
+                            }
+                            else
+                            {
+                                a -= 32;
+                            }
+                        }
+                        SPDLOG_INFO("a: {}", a);
                     }
                 }
 
@@ -146,7 +166,8 @@ int main(int argc, char* argv[])
                 SDL_RenderClear(g_renderer);
 
                 // 渲染图像
-                g_modulatedTexture.setColor(r, g, b);
+                g_backgroundTexture.render(0, 0);
+                g_modulatedTexture.setAlpha(a);
                 g_modulatedTexture.render(0, 0);
 
                 // 渲染
@@ -212,7 +233,17 @@ bool loadMedia()
 {
     bool success = true;
 
-    if (g_modulatedTexture.loadFromFile("resources/colors.png") == false)
+    if (g_modulatedTexture.loadFromFile("resources/fadeout.png") == false)
+    {
+        SPDLOG_ERROR("Failed to load image!");
+        success = false;
+    }
+    else
+    {
+        g_modulatedTexture.setBlendMode(SDL_BLENDMODE_BLEND);
+    }
+
+    if (g_backgroundTexture.loadFromFile("resources/fadein.png") == false)
     {
         SPDLOG_ERROR("Failed to load image!");
         success = false;
@@ -225,6 +256,7 @@ void close()
 {
     // Free image
     g_modulatedTexture.free();
+    g_backgroundTexture.free();
 
     // Destroy window
     SDL_DestroyRenderer(g_renderer);
